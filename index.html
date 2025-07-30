@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO & Social -->
+    <title>Legal Eagle – AI GST Notice Responder</title>
+    <meta
+      name="description"
+      content="Legal Eagle is the AI-powered assistant that crafts airtight GST notice responses, tracks compliance deadlines, and keeps Indian MSMEs ahead of regulators—no chartered-accountant required."
+    />
+    <meta property="og:title" content="Legal Eagle – AI GST Notice Responder" />
+    <meta
+      property="og:description"
+      content="Draft bullet-proof GST notice replies and automate your tax compliance calendar with Legal Eagle. Trusted by India's fastest-growing businesses."
+    />
+    <meta property="og:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'%3E%3Crect fill='%230C2242' width='1200' height='630'/%3E%3Ctext x='50%' y='50%' fill='%23FFFFFF' text-anchor='middle' dominant-baseline='middle' font-family='Inter, sans-serif' font-size='64'>Legal Eagle</text%3E%3C/svg%3E" />
+
+    <!-- Fonts -->
+    <link
+      rel="preload"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Lora:wght@400&display=swap"
+      as="style"
+      onload="this.rel='stylesheet'"
+    />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Lora:wght@400&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Chart.js and Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+  </head>
+  <body>
+    <!-- Skip link for accessibility -->
+    <a href="#main" class="skip-link">Skip to content</a>
+
+    <!-- Header / Navigation -->
+    <header class="header" aria-label="Main navigation">
+      <div class="container flex items-center justify-between gap-16 py-16">
+        <a href="#home" class="flex items-center gap-8" aria-label="Legal Eagle home">
+          <!-- Inline eagle logo (simplified SVG) -->
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="var(--color-primary)"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path d="M12 2l3 6 6 .5-4.5 4 1 6-5.5-3-5.5 3 1-6L3 8.5 9 8l3-6z" />
+          </svg>
+          <span class="logo-text">Legal&nbsp;Eagle</span>
+        </a>
+        <!-- Desktop nav -->
+        <nav class="nav" aria-label="Primary">
+          <ul class="nav__list" role="list">
+            <li><a class="nav__link" href="#home">Home</a></li>
+            <li><a class="nav__link" href="#features">Features</a></li>
+            <li><a class="nav__link" href="#pricing">Pricing</a></li>
+            <li><a class="nav__link" href="#blog">Blog</a></li>
+            <li><a class="nav__link" href="#security">Security</a></li>
+            <li><a class="nav__link btn btn--primary btn--sm" href="#dashboard">Dashboard</a></li>
+          </ul>
+        </nav>
+        <!-- Mobile hamburger -->
+        <button
+          id="hamburger"
+          class="hamburger"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+        >
+          <span class="hamburger__bar"></span>
+          <span class="hamburger__bar"></span>
+          <span class="hamburger__bar"></span>
+        </button>
+      </div>
+      <!-- Mobile menu -->
+      <nav id="mobile-menu" class="mobile-menu hidden" aria-label="Mobile"></nav>
+    </header>
+
+    <!-- Main content area -->
+    <main id="main">
+      <!-- Hero Section -->
+      <section id="home" class="section hero flex flex-col items-center text-center gap-16">
+        <h1 class="hero__title">
+          AI-Drafted GST Notice Responses
+          <span class="text-accent">in 60&nbsp;seconds</span>
+        </h1>
+        <p class="hero__subtitle">
+          Legal Eagle analyses your GST notice, cites the right circulars and
+          generates an on-point reply—so you can sleep easy.
+        </p>
+        <div class="flex gap-8">
+          <a
+            href="#pricing"
+            class="btn btn--primary btn--lg"
+            aria-label="See pricing plans"
+            >Try Legal Eagle for ₹999</a
+          >
+          <a
+            href="#features"
+            class="btn btn--secondary btn--lg"
+            aria-label="Explore features"
+            >See Features</a
+          >
+        </div>
+        <div class="trust-badges flex items-center gap-16" aria-label="Trusted by">
+          <span class="badge">FICCI</span>
+          <span class="badge">NASSCOM</span>
+          <span class="badge">ISO&nbsp;27001&nbsp;Roadmap</span>
+        </div>
+      </section>
+
+      <!-- Testimonials Slider -->
+      <section class="section" id="testimonials" aria-labelledby="testimonials-heading">
+        <h2 id="testimonials-heading" class="text-center mb-8">Loved by Indian MSMEs</h2>
+        <div class="slider" aria-roledescription="carousel" aria-label="Testimonials">
+          <div class="slider__track" id="slider-track"></div>
+          <button class="slider__control prev" aria-label="Previous testimonial">‹</button>
+          <button class="slider__control next" aria-label="Next testimonial">›</button>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <section id="features" class="section">
+        <h2 class="mb-16 text-center">Features that save you weekends</h2>
+        <div class="features-grid">
+          <article class="card feature-card">
+            <div class="card__body">
+              <h3>AI Drafts</h3>
+              <p>
+                Upload your GST notice PDF and let our fine-tuned model draft a
+                crystal-clear, reference-rich reply.
+              </p>
+            </div>
+          </article>
+          <article class="card feature-card">
+            <div class="card__body">
+              <h3>Compliance Calendar</h3>
+              <p>
+                Never miss a filing date again—deadlines sync to Google Calendar
+                & email reminders.
+              </p>
+            </div>
+          </article>
+          <article class="card feature-card">
+            <div class="card__body">
+              <h3>One-click Filings</h3>
+              <p>
+                Generate JSON returns directly from the dashboard and upload to
+                the GSTN portal.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Pricing Section -->
+      <section id="pricing" class="section pricing" aria-labelledby="pricing-heading">
+        <h2 id="pricing-heading" class="text-center mb-16">Transparent Pricing</h2>
+        <div class="pricing-table card">
+          <header class="card__header text-center">
+            <h3 class="mb-8">Pro Plan</h3>
+            <p class="price">₹17,999 <span class="price-period">/ year</span></p>
+          </header>
+          <div class="card__body">
+            <ul class="pricing-features" role="list">
+              <li>Unlimited GST notice drafts</li>
+              <li>Compliance calendar & reminders</li>
+              <li>Priority CA support</li>
+              <li>Secure document vault</li>
+            </ul>
+          </div>
+          <footer class="card__footer text-center">
+            <a
+              href="https://buy.stripe.com/test_9AQ5lE9XU5b9focdQQ"
+              target="_blank"
+              rel="noopener"
+              class="btn btn--primary btn--lg"
+              aria-label="Subscribe via Stripe checkout"
+              >Subscribe – ₹17,999/yr</a
+            >
+          </footer>
+        </div>
+      </section>
+
+      <!-- Security Section -->
+      <section id="security" class="section" aria-labelledby="security-heading">
+        <h2 id="security-heading" class="text-center mb-16">Security & Compliance</h2>
+        <div class="security-grid">
+          <div class="card security-card">
+            <div class="card__body">
+              <h3>256-bit TLS Encryption</h3>
+              <p>All data in transit is encrypted using industry-standard TLS.</p>
+            </div>
+          </div>
+          <div class="card security-card">
+            <div class="card__body">
+              <h3>ISO&nbsp;27001 Roadmap</h3>
+              <p>We're on track for ISO certification by Q4 2025.</p>
+            </div>
+          </div>
+          <div class="card security-card">
+            <div class="card__body">
+              <h3>GDPR & DPDP Ready</h3>
+              <p>
+                Our data processing agreements and policies meet India's DPDP Act
+                and EU GDPR.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Blog Section -->
+      <section id="blog" class="section" aria-labelledby="blog-heading">
+        <h2 id="blog-heading" class="text-center mb-16">Insights & Guides</h2>
+        <div id="blog-list" class="blog-list"></div>
+        <article id="blog-post" class="blog-post hidden"></article>
+      </section>
+
+      <!-- Dashboard Section -->
+      <section id="dashboard" class="section hidden" aria-labelledby="dashboard-heading">
+        <h2 id="dashboard-heading" class="mb-16">Dashboard</h2>
+        <div class="kpi-grid">
+          <div class="kpi-card card">
+            <div class="card__body text-center">
+              <h3 class="kpi-value" id="kpi-drafts">0</h3>
+              <p class="kpi-label">Drafts Generated</p>
+            </div>
+          </div>
+          <div class="kpi-card card">
+            <div class="card__body text-center">
+              <h3 class="kpi-value" id="kpi-deadlines">0</h3>
+              <p class="kpi-label">Upcoming Deadlines</p>
+            </div>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <canvas id="draftChart" height="280" aria-label="Drafts chart"></canvas>
+        </div>
+        <div class="calendar-section card">
+          <header class="calendar-header flex items-center justify-between mb-8">
+            <h3 class="m-0">Compliance Calendar</h3>
+            <button id="add-deadline-btn" class="btn btn--primary btn--sm" aria-controls="deadline-modal">+ Add</button>
+          </header>
+          <table class="calendar-table" aria-describedby="calendar-helptext">
+            <caption id="calendar-helptext" class="sr-only">Upcoming compliance deadlines</caption>
+            <thead>
+              <tr><th>Title</th><th>Deadline</th><th>Category</th></tr>
+            </thead>
+            <tbody id="calendar-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- Add Deadline Modal -->
+    <div id="deadline-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal__content">
+        <header class="modal__header flex items-center justify-between">
+          <h2 id="modal-title" class="m-0">Add Deadline</h2>
+          <button id="close-modal" class="btn btn--outline btn--sm" aria-label="Close modal">×</button>
+        </header>
+        <form id="deadline-form" class="modal__body" novalidate>
+          <div class="form-group">
+            <label for="deadline-title" class="form-label">Title</label>
+            <input type="text" id="deadline-title" class="form-control" required aria-required="true" />
+          </div>
+          <div class="form-group">
+            <label for="deadline-date" class="form-label">Deadline</label>
+            <input type="date" id="deadline-date" class="form-control" required aria-required="true" />
+          </div>
+          <div class="form-group">
+            <label for="deadline-category" class="form-label">Category</label>
+            <select id="deadline-category" class="form-control">
+              <option value="GST" selected>GST</option>
+              <option value="TDS">TDS</option>
+              <option value="ROC">ROC</option>
+            </select>
+          </div>
+          <footer class="modal__footer flex justify-between gap-8 mt-8">
+            <button type="button" id="cancel-modal" class="btn btn--secondary btn--sm">Cancel</button>
+            <button type="submit" class="btn btn--primary btn--sm">Save</button>
+          </footer>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer text-center py-16">
+      <p class="m-0">© <span id="year"></span> Legal Eagle. All rights reserved.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="app.js" defer></script>
+  </body>
+</html>
