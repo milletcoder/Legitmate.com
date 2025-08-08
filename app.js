@@ -44,53 +44,37 @@ function formatDate(iso) {
 }
 
 /**
- * Simple, safe Markdown-to-HTML converter used by the legacy marketing page.
+ * Safe Markdown-to-HTML converter used by the legacy marketing page.
  * Avoids tricky regex literals that previously caused a syntax error.
  * This file is written in ESM style for Next.js.
  */
 
 /**
  * Convert a subset of Markdown into HTML.
- * - Supports headings (#, ##, ###), bold (**text**), italic (*text*), links [text](url)
+ * - Supports headings (#, ##, ###), bold (**text**), italic (*text*), links [text](url), inline code `code`
  * - Wraps paragraphs and preserves basic line breaks
  * - Escapes HTML first for safety
- * @param {string} markdown
+ * @param {string} input
  * @returns {string}
  */
-function convertMarkdownToHtml(markdown) {
-  if (typeof markdown !== "string") return ""
-
-  // Escape HTML to avoid injection
-  const escapeHtml = (str) =>
-    str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-
-  let html = escapeHtml(markdown)
-
+function markdownToHtml(input) {
+  if (typeof input !== "string") return ""
   // Headings
-  html = html
-    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-
-  // Bold and italic
-  html = html
+  let out = input
+    .replace(/^### (.*)$/gm, "<h3>$1</h3>")
+    .replace(/^## (.*)$/gm, "<h2>$1</h2>")
+    .replace(/^# (.*)$/gm, "<h1>$1</h1>")
+  // Bold, italics, inline code
+  out = out
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
-
-  // Links: [label](url)
-  html = html.replace(/\[([^\]]+)\]$$([^)]+)$$/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-
-  // Convert double line breaks to paragraphs
-  html = html
-    .split(/\n{2,}/)
-    .map((block) => `<p>${block.replace(/\n/g, "<br />")}</p>`)
-    .join("")
-
-  return html
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+  // Simple paragraphs
+  out = out.replace(/^(?!<h\d>|<ul>|<ol>|<li>|<p>|<code>)([^\n]+)\n?/gm, "<p>$1</p>")
+  return out
 }
+
+export { markdownToHtml }
 
 /* ---------------------------- Global State ----------------------------- */
 const state = {
@@ -253,7 +237,7 @@ function initBlog() {
     list.classList.add('hidden');
     
     // Use simple HTML formatting instead of marked.parse since marked might not be available
-    const formattedBody = convertMarkdownToHtml(art.body);
+    const formattedBody = markdownToHtml(art.body);
     
     post.innerHTML = `
       <button class="btn btn--outline btn--sm mb-8" aria-label="Back to articles" id="back-to-list">← Back</button>
