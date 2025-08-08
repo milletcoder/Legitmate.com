@@ -53,7 +53,7 @@ const state = {
     },
     {
       name: 'Anjali | Spice D2C',
-      quote: 'Legal Eagle's calendar pinged me before every GSTR-3B. Stress → 0.',
+      quote: "Legal Eagle's calendar pinged me before every GSTR-3B. Stress → 0.",
       avatar: 'https://unsplash.it/80/80?image=1005'
     },
     {
@@ -204,12 +204,16 @@ function initBlog() {
     list.classList.add('hidden');
     
     // Use simple HTML formatting instead of marked.parse since marked might not be available
-    const formattedBody = art.body
-      .replace(/## /g, '<h2>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/### /g, '<h3>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    const formattedBody =
+    art.body
+      // Headings
+      .replace(new RegExp('^###\\s+', 'gm'), '<h3>')
+      .replace(new RegExp('^##\\s+', 'gm'), '<h2>')
+      // Bold and italics
+      .replace(new RegExp('\\*\\*(.*?)\\*\\*', 'g'), '<strong>$1</strong>')
+      .replace(new RegExp('\\*(.*?)\\*', 'g'), '<em>$1</em>')
+      // Paragraph breaks
+      .replace(/\n\n/g, '</p><p>');
     
     post.innerHTML = `
       <button class="btn btn--outline btn--sm mb-8" aria-label="Back to articles" id="back-to-list">← Back</button>

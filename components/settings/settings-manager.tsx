@@ -11,22 +11,11 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  User,
-  Shield,
-  Bell,
-  Palette,
-  CreditCard,
-  Save,
-  RefreshCw,
-  Trash2,
-  Download,
-  Upload,
-  Eye,
-  EyeOff,
-} from "lucide-react"
-import { useAuth } from "@/hooks/use-auth"
+import { User, Shield, Bell, Palette, CreditCard, Save, RefreshCw, Trash2, Download, Upload, Eye, EyeOff } from 'lucide-react'
+// Updated import to the consolidated provider
+import { useAuth } from "@/components/providers/auth-provider"
 import { useTheme } from "next-themes"
+import { useToast } from "@/hooks/use-toast"
 
 interface UserSettings {
   profile: {
@@ -108,8 +97,12 @@ export function SettingsManager() {
   const [settings, setSettings] = useState<UserSettings>(defaultSettings)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { user } = useAuth()
-  const { theme, setTheme } = useTheme()
+  const { user, logout } = useAuth()
+  const { setTheme } = useTheme()
+  const { toast } = useToast()
+  const [displayName, setDisplayName] = useState<string>(user?.name ?? "")
+  const [emailNotifications, setEmailNotifications] = useState<boolean>(true)
+  const [smsNotifications, setSmsNotifications] = useState<boolean>(false)
 
   const updateSettings = (section: keyof UserSettings, key: string, value: any) => {
     setSettings((prev) => ({
@@ -123,10 +116,9 @@ export function SettingsManager() {
 
   const handleSave = async () => {
     setIsLoading(true)
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000))
     setIsLoading(false)
-    // Show success message
+    // Could show a toast here if desired
   }
 
   const handleReset = () => {
@@ -141,6 +133,21 @@ export function SettingsManager() {
     linkElement.setAttribute("href", dataUri)
     linkElement.setAttribute("download", exportFileDefaultName)
     linkElement.click()
+  }
+
+  const handleSaveProfile = () => {
+    // In a real app, call a server action / API. Here we just confirm the action.
+    toast({
+      title: "Profile updated",
+      description: `Display name set to "${displayName || "—"}".`,
+    });
+  }
+
+  const handleSaveNotifications = () => {
+    toast({
+      title: "Notification preferences saved",
+      description: `Email: ${emailNotifications ? "On" : "Off"} · SMS: ${smsNotifications ? "On" : "Off"}`,
+    });
   }
 
   return (
@@ -243,6 +250,12 @@ export function SettingsManager() {
                   onChange={(e) => updateSettings("profile", "bio", e.target.value)}
                   rows={3}
                 />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleSaveProfile}>Save Profile</Button>
+                <Button variant="outline" onClick={logout}>
+                  Log out
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -353,7 +366,7 @@ export function SettingsManager() {
                 <span>Notification Preferences</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               <div className="space-y-4">
                 <h4 className="font-medium">Communication</h4>
                 <div className="space-y-4">
@@ -363,8 +376,9 @@ export function SettingsManager() {
                       <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                     </div>
                     <Switch
-                      checked={settings.notifications.emailNotifications}
-                      onCheckedChange={(checked) => updateSettings("notifications", "emailNotifications", checked)}
+                      checked={emailNotifications}
+                      onCheckedChange={setEmailNotifications}
+                      aria-label="Toggle email notifications"
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -383,8 +397,9 @@ export function SettingsManager() {
                       <p className="text-sm text-muted-foreground">Receive critical alerts via SMS</p>
                     </div>
                     <Switch
-                      checked={settings.notifications.smsNotifications}
-                      onCheckedChange={(checked) => updateSettings("notifications", "smsNotifications", checked)}
+                      checked={smsNotifications}
+                      onCheckedChange={setSmsNotifications}
+                      aria-label="Toggle SMS notifications"
                     />
                   </div>
                 </div>
@@ -426,6 +441,9 @@ export function SettingsManager() {
                     />
                   </div>
                 </div>
+              </div>
+              <div className="pt-2">
+                <Button onClick={handleSaveNotifications}>Save Preferences</Button>
               </div>
             </CardContent>
           </Card>
@@ -707,3 +725,5 @@ export function SettingsManager() {
     </div>
   )
 }
+
+export default SettingsManager;

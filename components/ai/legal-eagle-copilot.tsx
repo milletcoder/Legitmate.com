@@ -1,13 +1,16 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Bot, Send, Paperclip, Mic, MicOff, FileText, Scale, Shield, Clock, Lightbulb, Sparkles } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Bot, Send, Paperclip, Mic, MicOff, FileText, Scale, Shield, Clock, Lightbulb, Sparkles } from 'lucide-react'
+
+type Provider = "xai" | "groq"
 
 interface Message {
   id: string
@@ -68,23 +71,55 @@ export function LegalEagleCopilot() {
   const [isLoading, setIsLoading] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [provider, setProvider] = useState<Provider>("xai")
+  const [lastUploadUrl, setLastUploadUrl] = useState<string | null>(null)
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   useEffect(() => {
     scrollToBottom()
-  }, [messages])
+  }, [messages, isLoading])
+
+  async function sendToAI(content: string) {
+    const payload = {
+      provider,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are Legal Eagle, an AI legal copilot. Provide helpful, accurate, and concise answers. This is not legal advice.",
+        },
+        ...messages
+          .filter((m) => m.type !== "suggestion")
+          .slice(-10)
+          .map((m) => ({ role: m.sender === "user" ? "user" : "assistant", content: m.content })),
+        { role: "user", content },
+      ],
+    }
+
+    const res = await fetch("/api/ai/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}))
+      throw new Error(error?.details || "AI request failed")
+    }
+    const data = (await res.json()) as { text: string }
+    return data.text
+  }
 
   const handleSendMessage = async (content: string = inputValue) => {
-    if (!content.trim()) return
+    const trimmed = content.trim()
+    if (!trimmed) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: content.trim(),
+      content: trimmed,
       sender: "user",
       timestamp: new Date(),
       type: "text",
@@ -94,37 +129,76 @@ export function LegalEagleCopilot() {
     setInputValue("")
     setIsLoading(true)
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const aiText = await sendToAI(trimmed)
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: generateAIResponse(content),
+        content: aiText,
         sender: "ai",
         timestamp: new Date(),
         type: "analysis",
       }
       setMessages((prev) => [...prev, aiResponse])
+    } catch (err: any) {
+      console.error(err)
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          content: "Sorry, I ran into a problem. Please try again or switch the provider.",
+          sender: "ai",
+          timestamp: new Date(),
+          type: "text",
+        },
+      ])
+    } finally {
       setIsLoading(false)
-    }, 1500)
-  }
-
-  const generateAIResponse = (userInput: string): string => {
-    const responses = [
-      "I've analyzed your request. Based on current legal standards and best practices, here are my recommendations...",
-      "Let me help you with that legal matter. I've reviewed relevant case law and regulations...",
-      "I can assist you with this document review. Here's what I found regarding compliance and potential risks...",
-      "Based on my analysis of similar cases and current legal precedents, I recommend the following approach...",
-    ]
-    return responses[Math.floor(Math.random() * responses.length)]
+    }
   }
 
   const handleQuickSuggestion = (suggestion: (typeof quickSuggestions)[0]) => {
     handleSendMessage(suggestion.prompt)
   }
 
-  const toggleVoiceInput = () => {
-    setIsListening(!isListening)
-    // Voice input implementation would go here
+  const toggleVoiceInput = () => setIsListening((s) => !s)
+
+  const handlePaperclipClick = () => fileInputRef.current?.click()
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const form = new FormData()
+      form.append("file", file)
+      const res = await fetch("/api/upload", { method: "POST", body: form })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || "Upload failed")
+      setLastUploadUrl(data.url)
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: String(Date.now()),
+          content: `Uploaded file: ${file.name}\nURL: ${data.url}`,
+          sender: "user",
+          timestamp: new Date(),
+          type: "text",
+        },
+      ])
+    } catch (err) {
+      console.error("Upload failed:", err)
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: String(Date.now()),
+          content: "File upload failed. Please try again.",
+          sender: "ai",
+          timestamp: new Date(),
+          type: "text",
+        },
+      ])
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
   }
 
   return (
@@ -137,15 +211,28 @@ export function LegalEagleCopilot() {
       </SheetTrigger>
       <SheetContent className="w-full sm:w-[480px] p-0">
         <div className="flex h-full flex-col">
-          {/* Header */}
-          <SheetHeader className="border-b p-6">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-white" />
+          <SheetHeader className="border-b p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <SheetTitle className="text-left">Legal Eagle AI</SheetTitle>
+                  <SheetDescription className="text-left">Your intelligent legal assistant</SheetDescription>
+                </div>
               </div>
-              <div>
-                <SheetTitle className="text-left">Legal Eagle AI</SheetTitle>
-                <SheetDescription className="text-left">Your intelligent legal assistant</SheetDescription>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Provider</span>
+                <Select value={provider} onValueChange={(v) => setProvider(v as Provider)}>
+                  <SelectTrigger className="h-8 w-[120px]">
+                    <SelectValue placeholder="xAI (Grok)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="xai">Grok (xAI)</SelectItem>
+                    <SelectItem value="groq">Groq</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="flex flex-wrap gap-1 mt-3">
@@ -160,13 +247,12 @@ export function LegalEagleCopilot() {
             </div>
           </SheetHeader>
 
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-4">
+          <ScrollArea className="flex-1 p-3 sm:p-4">
             <div className="space-y-4">
               {messages.map((message) => (
                 <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`flex max-w-[80%] space-x-2 ${
+                    className={`flex max-w-[85%] sm:max-w-[80%] space-x-2 ${
                       message.sender === "user" ? "flex-row-reverse space-x-reverse" : ""
                     }`}
                   >
@@ -184,12 +270,9 @@ export function LegalEagleCopilot() {
                         message.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                       }`}
                     >
-                      <p className="text-sm">{message.content}</p>
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                       <p className="text-xs opacity-70 mt-1">
-                        {message.timestamp.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </p>
                     </div>
                   </div>
@@ -206,14 +289,8 @@ export function LegalEagleCopilot() {
                     <div className="bg-muted rounded-lg px-3 py-2">
                       <div className="flex space-x-1">
                         <div className="w-2 h-2 bg-current rounded-full animate-bounce" />
-                        <div
-                          className="w-2 h-2 bg-current rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        />
-                        <div
-                          className="w-2 h-2 bg-current rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        />
+                        <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+                        <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
                       </div>
                     </div>
                   </div>
@@ -223,9 +300,8 @@ export function LegalEagleCopilot() {
             </div>
           </ScrollArea>
 
-          {/* Quick Suggestions */}
           {messages.length === 1 && (
-            <div className="border-t p-4">
+            <div className="border-t p-3 sm:p-4">
               <h4 className="text-sm font-medium mb-3 flex items-center">
                 <Lightbulb className="h-4 w-4 mr-2" />
                 Quick Actions
@@ -250,14 +326,13 @@ export function LegalEagleCopilot() {
             </div>
           )}
 
-          {/* Input */}
-          <div className="border-t p-4">
+          <div className="border-t p-3 sm:p-4">
             <form
               onSubmit={(e) => {
                 e.preventDefault()
                 handleSendMessage()
               }}
-              className="flex space-x-2"
+              className="flex gap-2"
             >
               <div className="flex-1 relative">
                 <Input
@@ -266,29 +341,48 @@ export function LegalEagleCopilot() {
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Ask me anything about legal matters..."
                   disabled={isLoading}
-                  className="pr-20"
+                  className="pr-24"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={toggleVoiceInput}>
-                    {isListening ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={toggleVoiceInput}
+                    aria-pressed={isListening}
+                    title={isListening ? "Stop voice input" : "Start voice input"}
+                  >
+                    {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                   </Button>
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0">
-                    <Paperclip className="h-3 w-3" />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={handlePaperclipClick}
+                    title="Attach file"
+                  >
+                    <Paperclip className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={!inputValue.trim() || isLoading}
-                className="bg-gradient-primary"
-              >
+              <Button type="submit" size="sm" disabled={!inputValue.trim() || isLoading} className="bg-gradient-primary" aria-label="Send message">
                 <Send className="h-4 w-4" />
               </Button>
             </form>
+            {lastUploadUrl && (
+              <p className="text-[11px] text-muted-foreground mt-2 truncate">
+                Last upload:{" "}
+                <a className="underline" href={lastUploadUrl} target="_blank" rel="noreferrer">
+                  {lastUploadUrl}
+                </a>
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-2 text-center">
               AI responses are for informational purposes only and do not constitute legal advice.
             </p>
+            <input type="file" ref={fileInputRef} className="sr-only" onChange={handleFileChange} />
           </div>
         </div>
       </SheetContent>

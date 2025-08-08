@@ -1,26 +1,25 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "@/components/ui/use-toast"
 
 interface User {
   id: string
   email: string
   firstName?: string
   lastName?: string
-  companyName?: string
-  companySize?: string
-  gstin?: string
-  avatar?: string
+  role: "admin" | "user" | "guest"
 }
 
 interface AuthContextType {
   user: User | null
+  isAuthenticated: boolean
+  login: (email: string, password: string) => Promise<boolean>
+  register: (email: string, password: string, firstName: string, lastName: string) => Promise<boolean>
+  logout: () => void
   isLoading: boolean
-  signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, userData?: Partial<User>) => Promise<void>
-  signInWithGoogle: () => Promise<void>
-  signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -28,111 +27,94 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
-    // Simulate checking for existing session
-    const checkAuth = async () => {
-      try {
-        const savedUser = localStorage.getItem("legal-eagle-user")
-        if (savedUser) {
-          setUser(JSON.parse(savedUser))
-        }
-      } catch (error) {
-        console.error("Auth check failed:", error)
-      } finally {
-        setIsLoading(false)
-      }
+    const storedUser = localStorage.getItem("legal_eagle_user")
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
     }
-
-    checkAuth()
+    setIsLoading(false)
   }, [])
 
-  const signIn = async (email: string, password: string) => {
-    setIsLoading(true)
-    try {
+  const login = useCallback(
+    async (email, password) => {
+      setIsLoading(true)
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      const mockUser: User = {
-        id: "1",
-        email,
-        firstName: "John",
-        lastName: "Doe",
-        companyName: "Demo Company",
+      if (email === "test@example.com" && password === "password") {
+        const mockUser: User = {
+          id: "user-123",
+          email,
+          firstName: "John",
+          lastName: "Doe",
+          role: "user",
+        }
+        localStorage.setItem("legal_eagle_user", JSON.stringify(mockUser))
+        setUser(mockUser)
+        toast({
+          title: "Login Successful",
+          description: "Welcome back to Legal Eagle!",
+        })
+        router.push("/dashboard")
+        setIsLoading(false)
+        return true
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Invalid email or password.",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return false
       }
+    },
+    [router],
+  )
 
-      setUser(mockUser)
-      localStorage.setItem("legal-eagle-user", JSON.stringify(mockUser))
-    } catch (error) {
-      throw new Error("Invalid credentials")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const signUp = async (email: string, password: string, userData?: Partial<User>) => {
-    setIsLoading(true)
-    try {
+  const register = useCallback(
+    async (email, password, firstName, lastName) => {
+      setIsLoading(true)
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
+      // In a real app, you'd check if email already exists
       const mockUser: User = {
-        id: "1",
+        id: `user-${Date.now()}`,
         email,
-        firstName: userData?.firstName || "New",
-        lastName: userData?.lastName || "User",
-        companyName: userData?.companyName,
-        companySize: userData?.companySize,
-        gstin: userData?.gstin,
+        firstName,
+        lastName,
+        role: "user",
       }
-
+      localStorage.setItem("legal_eagle_user", JSON.stringify(mockUser))
       setUser(mockUser)
-      localStorage.setItem("legal-eagle-user", JSON.stringify(mockUser))
-    } catch (error) {
-      throw new Error("Registration failed")
-    } finally {
+      toast({
+        title: "Registration Successful",
+        description: "Your Legal Eagle account has been created!",
+      })
+      router.push("/dashboard")
       setIsLoading(false)
-    }
-  }
+      return true
+    },
+    [router],
+  )
 
-  const signInWithGoogle = async () => {
-    setIsLoading(true)
-    try {
-      // Simulate Google OAuth
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const mockUser: User = {
-        id: "1",
-        email: "user@gmail.com",
-        firstName: "Google",
-        lastName: "User",
-        avatar: "https://lh3.googleusercontent.com/a/default-user=s96-c",
-      }
-
-      setUser(mockUser)
-      localStorage.setItem("legal-eagle-user", JSON.stringify(mockUser))
-    } catch (error) {
-      throw new Error("Google sign-in failed")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const signOut = async () => {
+  const logout = useCallback(() => {
+    localStorage.removeItem("legal_eagle_user")
     setUser(null)
-    localStorage.removeItem("legal-eagle-user")
-  }
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
+    })
+    router.push("/login")
+  }, [router])
 
-  const value = {
-    user,
-    isLoading,
-    signIn,
-    signUp,
-    signInWithGoogle,
-    signOut,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, register, logout, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
