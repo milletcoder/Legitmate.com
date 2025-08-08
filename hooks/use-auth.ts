@@ -1,5 +1,6 @@
-"use client"
-
-// Compatibility shim to support existing imports from "@/hooks/use-auth".
-// Re-export the consolidated hook from the AuthProvider.
+/**
+ * Compatibility shim for legacy imports.
+ * Ensures a named export `useAuth` exists at "@/hooks/use-auth".
+ * This re-exports from the consolidated Auth Provider.
+ */
 export { useAuth } from "@/components/providers/auth-provider"

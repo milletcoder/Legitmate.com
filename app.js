@@ -43,6 +43,55 @@ function formatDate(iso) {
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+/**
+ * Simple, safe Markdown-to-HTML converter used by the legacy marketing page.
+ * Avoids tricky regex literals that previously caused a syntax error.
+ * This file is written in ESM style for Next.js.
+ */
+
+/**
+ * Convert a subset of Markdown into HTML.
+ * - Supports headings (#, ##, ###), bold (**text**), italic (*text*), links [text](url)
+ * - Wraps paragraphs and preserves basic line breaks
+ * - Escapes HTML first for safety
+ * @param {string} markdown
+ * @returns {string}
+ */
+function convertMarkdownToHtml(markdown) {
+  if (typeof markdown !== "string") return ""
+
+  // Escape HTML to avoid injection
+  const escapeHtml = (str) =>
+    str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+
+  let html = escapeHtml(markdown)
+
+  // Headings
+  html = html
+    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+
+  // Bold and italic
+  html = html
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+
+  // Links: [label](url)
+  html = html.replace(/\[([^\]]+)\]$$([^)]+)$$/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+
+  // Convert double line breaks to paragraphs
+  html = html
+    .split(/\n{2,}/)
+    .map((block) => `<p>${block.replace(/\n/g, "<br />")}</p>`)
+    .join("")
+
+  return html
+}
+
 /* ---------------------------- Global State ----------------------------- */
 const state = {
   testimonials: [
@@ -204,21 +253,12 @@ function initBlog() {
     list.classList.add('hidden');
     
     // Use simple HTML formatting instead of marked.parse since marked might not be available
-    const formattedBody =
-    art.body
-      // Headings
-      .replace(new RegExp('^###\\s+', 'gm'), '<h3>')
-      .replace(new RegExp('^##\\s+', 'gm'), '<h2>')
-      // Bold and italics
-      .replace(new RegExp('\\*\\*(.*?)\\*\\*', 'g'), '<strong>$1</strong>')
-      .replace(new RegExp('\\*(.*?)\\*', 'g'), '<em>$1</em>')
-      // Paragraph breaks
-      .replace(/\n\n/g, '</p><p>');
+    const formattedBody = convertMarkdownToHtml(art.body);
     
     post.innerHTML = `
       <button class="btn btn--outline btn--sm mb-8" aria-label="Back to articles" id="back-to-list">← Back</button>
       <h2>${art.title}</h2>
-      <div class="prose"><p>${formattedBody}</p></div>
+      <div class="prose">${formattedBody}</div>
     `;
     
     $('#back-to-list').addEventListener('click', () => {

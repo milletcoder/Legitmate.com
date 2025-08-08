@@ -48,7 +48,6 @@
     "cmdk": "latest",
     "crypto-js": "latest",
     "date-fns": "latest",
-    "duckdb": "latest",
     "embla-carousel-react": "latest",
     "framer-motion": "latest",
     "geist": "^1.3.1",

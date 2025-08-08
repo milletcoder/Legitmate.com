@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Mona_Sans as FontSans, Young_Serif as FontSerif } from "next/font/google"
+import { Mona_Sans as FontSans, Young_Serif as FontSerif } from 'next/font/google'
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/providers/theme-provider"
@@ -18,8 +18,7 @@ const fontSans = FontSans({
 const fontSerif = FontSerif({
   subsets: ["latin"],
   variable: "--font-serif",
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
+  weight: "400",
 })
 
 export const metadata: Metadata = {

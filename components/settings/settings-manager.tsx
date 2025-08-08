@@ -1,7 +1,8 @@
 "use client"
 
+import React from "react"
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -93,16 +94,28 @@ const defaultSettings: UserSettings = {
   },
 }
 
+type ProfileForm = {
+  name: string
+  email: string
+}
+
 export function SettingsManager() {
   const [settings, setSettings] = useState<UserSettings>(defaultSettings)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { user, logout } = useAuth()
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const { toast } = useToast()
-  const [displayName, setDisplayName] = useState<string>(user?.name ?? "")
-  const [emailNotifications, setEmailNotifications] = useState<boolean>(true)
-  const [smsNotifications, setSmsNotifications] = useState<boolean>(false)
+  const [profile, setProfile] = React.useState<ProfileForm>({
+    name: user?.name ?? "",
+    email: user?.email ?? "",
+  })
+  const [notifications, setNotifications] = React.useState({
+    email: true,
+    sms: false,
+    inApp: true,
+  })
+  const [saving, setSaving] = React.useState(false)
 
   const updateSettings = (section: keyof UserSettings, key: string, value: any) => {
     setSettings((prev) => ({
@@ -112,6 +125,37 @@ export function SettingsManager() {
         [key]: value,
       },
     }))
+  }
+
+  const onSave = async () => {
+    setSaving(true)
+    // In a real app, call an API to persist settings. We simulate success here.
+    await new Promise((r) => setTimeout(r, 700))
+    setSaving(false)
+    toast({
+      title: "Settings saved",
+      description: "Your preferences were updated successfully.",
+    })
+  }
+
+  const onExportData = () => {
+    // Simple JSON export of current settings
+    const data = {
+      profile,
+      notifications,
+      theme,
+      userId: user?.id ?? null,
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "legal-eagle-settings.json"
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    toast({ title: "Export complete", description: "Downloaded your settings JSON." })
   }
 
   const handleSave = async () => {
@@ -125,28 +169,18 @@ export function SettingsManager() {
     setSettings(defaultSettings)
   }
 
-  const handleExportData = () => {
-    const dataStr = JSON.stringify(settings, null, 2)
-    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
-    const exportFileDefaultName = "legal-eagle-settings.json"
-    const linkElement = document.createElement("a")
-    linkElement.setAttribute("href", dataUri)
-    linkElement.setAttribute("download", exportFileDefaultName)
-    linkElement.click()
-  }
-
   const handleSaveProfile = () => {
     // In a real app, call a server action / API. Here we just confirm the action.
     toast({
       title: "Profile updated",
-      description: `Display name set to "${displayName || "—"}".`,
+      description: `Display name set to "${profile.name || "—"}".`,
     });
   }
 
   const handleSaveNotifications = () => {
     toast({
       title: "Notification preferences saved",
-      description: `Email: ${emailNotifications ? "On" : "Off"} · SMS: ${smsNotifications ? "On" : "Off"}`,
+      description: `Email: ${notifications.email ? "On" : "Off"} · SMS: ${notifications.sms ? "On" : "Off"}`,
     });
   }
 
@@ -258,6 +292,14 @@ export function SettingsManager() {
                 </Button>
               </div>
             </CardContent>
+            <CardFooter className="justify-between">
+              <Button variant="secondary" onClick={onExportData}>
+                Export Data
+              </Button>
+              <Button onClick={onSave} disabled={saving}>
+                {saving ? "Saving..." : "Save"}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
 
@@ -376,8 +418,8 @@ export function SettingsManager() {
                       <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                     </div>
                     <Switch
-                      checked={emailNotifications}
-                      onCheckedChange={setEmailNotifications}
+                      checked={notifications.email}
+                      onCheckedChange={setNotifications}
                       aria-label="Toggle email notifications"
                     />
                   </div>
@@ -397,8 +439,8 @@ export function SettingsManager() {
                       <p className="text-sm text-muted-foreground">Receive critical alerts via SMS</p>
                     </div>
                     <Switch
-                      checked={smsNotifications}
-                      onCheckedChange={setSmsNotifications}
+                      checked={notifications.sms}
+                      onCheckedChange={setNotifications}
                       aria-label="Toggle SMS notifications"
                     />
                   </div>
@@ -446,6 +488,14 @@ export function SettingsManager() {
                 <Button onClick={handleSaveNotifications}>Save Preferences</Button>
               </div>
             </CardContent>
+            <CardFooter className="justify-between">
+              <Button variant="outline" onClick={() => logout()}>
+                Log out
+              </Button>
+              <Button onClick={onSave} disabled={saving}>
+                {saving ? "Saving..." : "Save"}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
 
@@ -542,6 +592,14 @@ export function SettingsManager() {
                 />
               </div>
             </CardContent>
+            <CardFooter className="justify-between">
+              <Button variant="outline" onClick={() => logout()}>
+                Log out
+              </Button>
+              <Button onClick={onSave} disabled={saving}>
+                {saving ? "Saving..." : "Save"}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
 
@@ -611,7 +669,7 @@ export function SettingsManager() {
               <div className="space-y-4">
                 <h4 className="font-medium">Data Management</h4>
                 <div className="flex items-center space-x-2">
-                  <Button variant="outline" onClick={handleExportData}>
+                  <Button variant="outline" onClick={onExportData}>
                     <Download className="h-4 w-4 mr-2" />
                     Export My Data
                   </Button>
@@ -626,6 +684,14 @@ export function SettingsManager() {
                 </div>
               </div>
             </CardContent>
+            <CardFooter className="justify-between">
+              <Button variant="outline" onClick={() => logout()}>
+                Log out
+              </Button>
+              <Button onClick={onSave} disabled={saving}>
+                {saving ? "Saving..." : "Save"}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
 
@@ -719,6 +785,14 @@ export function SettingsManager() {
                 </div>
               </div>
             </CardContent>
+            <CardFooter className="justify-between">
+              <Button variant="outline" onClick={() => logout()}>
+                Log out
+              </Button>
+              <Button onClick={onSave} disabled={saving}>
+                {saving ? "Saving..." : "Save"}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>
